@@ -134,7 +134,10 @@ const regexParserFactory = (regex, regexType) =>
             : addSuggestion(parserState.result, regex);
         return updateParserError(
             parserState,
-            `${regexType}: Couldn't match ${regexType} at index ${index}, remaining string: ${slicedTarget.slice(0,20)}`
+            `${regexType}: Couldn't match ${regex} at index ${index}, remaining string: ${slicedTarget.slice(
+                0,
+                20
+            )}`
         );
     });
 
@@ -184,16 +187,32 @@ const eat = terminal =>
             return parserState;
         }
         const slicedTarget = target.slice(index);
-        const termIndex = slicedTarget.indexOf(terminal);
+        const matched = slicedTarget.match(terminal);
+        const termIndex = matched ? matched.index : -1;
+        const eatenToken = slicedTarget.slice(0, termIndex);
         if (termIndex !== -1) {
             return updateParserState(
-                parserState,
+                {
+                    ...parserState,
+                    lastMatchedToken: eatenToken,
+                    lastMatchedTokenIndex: index + termIndex,
+                    lastMatchedParserIndex: index + termIndex
+                },
                 index + termIndex,
-                slicedTarget.slice(0, termIndex)
+                eatenToken
             );
         }
 
-        return updateParserState(parserState, target.length, slicedTarget);
+        return updateParserState(
+            {
+                ...parserState,
+                lastMatchedToken: slicedTarget,
+                lastMatchedTokenIndex: target.length,
+                lastMatchedParserIndex: target.length
+            },
+            target.length,
+            slicedTarget
+        );
     });
 
 const sequenceOf = parsers =>
@@ -208,8 +227,8 @@ const sequenceOf = parsers =>
             results.push(nextState.result);
         }
 
-        if(nextState.isError) {
-            return nextState
+        if (nextState.isError) {
+            return nextState;
         }
         return updateParserResult(nextState, results);
     });
@@ -227,6 +246,8 @@ const choice = parsers =>
             if (!nextState.isError) {
                 return nextState;
             }
+            // 在choice的场景中，lastMatchedToken是走得最远的那个token
+            console.log(`choice matching failed, reason:  ${nextState.error}`);
             if (
                 nextState.lastMatchedToken &&
                 nextState.lastMatchedTokenIndex > preStateMatchedTokenState
@@ -432,15 +453,17 @@ const sequenceSepBy = sep => parsers =>
         }
         nextState = parsers[count].parseStateTransformFn(nextState);
         results.push(nextState.result);
+        if (nextState.isError) {
+            return nextState;
+        }
         return updateParserResult(nextState, results);
     });
 
 const peek = new Parser(parserState => {
-    return updateParserResult(parserState, parserState.target[parserState.index])
-})
+    return updateParserResult(parserState, parserState.target[parserState.index]);
+});
 
-
-const getCurState = new Parser(parserState => parserState)
+const getCurState = new Parser(parserState => parserState);
 
 const setCurState = state =>
     new Parser(parserState => {
