@@ -1,6 +1,6 @@
 {
   "name": "parser_combinator_lib",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "该项目代码改写自Youtube Parser Combinator教程：\r https://www.youtube.com/watch?v=6oQLRhw5Ah0&list=PLP29wDx6QmW5yfO1LAgO8kU3aQEj8SIrU",
   "main": "index.js",
   "scripts": {

@@ -247,7 +247,7 @@ const choice = parsers =>
                 return nextState;
             }
             // 在choice的场景中，lastMatchedToken是走得最远的那个token
-            console.log(`choice matching failed, reason:  ${nextState.error}`);
+            // console.log(`choice matching failed, reason:  ${nextState.error}`);
             if (
                 nextState.lastMatchedToken &&
                 nextState.lastMatchedTokenIndex > preStateMatchedTokenState
